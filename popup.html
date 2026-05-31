@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+  <style>
+    body {
+      padding: 15px;
+      box-sizing: border-box;
+      min-width: 320px;
+    }
+    input[type="checkbox"] {
+      accent-color: #00ff9d;
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+    }
+    .counter-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .counter-number {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .counter-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #718096;
+    }
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+      width: 100%;
+    }
+    .btn-secondary-custom {
+      width: 100%;
+      background: #1a202c;
+      color: #a0aec0;
+      border: 1px solid #4a5568;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: sans-serif;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-secondary-custom:hover {
+      border-color: #e53e3e;
+      color: #e53e3e;
+      background: #2d3748;
+    }
+    /* Stile Sezione Whitelist */
+    .whitelist-section {
+      margin-top: 20px;
+      border-top: 1px solid #2d3748;
+      padding-top: 15px;
+    }
+    .whitelist-title {
+      font-size: 12px;
+      color: #a0aec0;
+      margin-bottom: 8px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .whitelist-textarea {
+      width: 100%;
+      height: 60px;
+      background: #1a202c;
+      border: 1px solid #4a5568;
+      border-radius: 4px;
+      color: #fff;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      resize: none;
+      box-sizing: border-box;
+    }
+    .whitelist-textarea:focus {
+      border-color: #00ff9d;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>LinkSanitizer</h1>
+    <input type="checkbox" id="toggleStatus" checked>
+  </div>
+  <div class="status-text" id="statusLabel">● ATTIVO</div>
+  
+  <div class="counter-box">
+    <div id="counter" class="counter-number">0</div>
+    <div class="counter-label">Parametri rimossi</div>
+  </div>
+
+  <div class="action-buttons">
+    <button id="btnCleanTab" class="btn-primary">⚡ Pulisci scheda corrente</button>
+    <button id="btnResetCounter" class="btn-secondary-custom">🔄 Azzera contatore</button>
+  </div>
+
+  <div class="whitelist-section">
+    <div class="whitelist-title">🛡️ Tuo Elenco Esclusioni (un sito per riga)</div>
+    <textarea id="txtWhitelist" class="whitelist-textarea" placeholder="esempio.it&#10;repubblica.it"></textarea>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

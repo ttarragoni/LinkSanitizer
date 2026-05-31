@@ -1,0 +1,65 @@
+{
+  "extName": {
+    "message": "LinkSanitizer"
+  },
+  "extDescription": {
+    "message": "Supprime automatiquement les paramètres de suivi (utm_*, fbclid, gclid, etc.) des URL avant le chargement de la page."
+  },
+  "statusActive": {
+    "message": "Actif"
+  },
+  "statusPaused": {
+    "message": "En pause"
+  },
+  "counterLabel": {
+    "message": "Paramètres de suivi supprimés"
+  },
+  "counterUnit": {
+    "message": "param"
+  },
+  "counterSublabel": {
+    "message": "sur toutes vos sessions de navigation"
+  },
+  "paramsBeingStripped": {
+    "message": "Paramètres supprimés"
+  },
+  "resetCounter": {
+    "message": "Réinitialiser"
+  },
+  "resetting": {
+    "message": "Réinitialisation…"
+  },
+  "allowlistTitle": {
+    "message": "Domaines autorisés"
+  },
+  "allowlistHint": {
+    "message": "Les paramètres de suivi sont conservés sur ces sites"
+  },
+  "allowlistPlaceholder": {
+    "message": "ex. exemple.com"
+  },
+  "allowlistAdd": {
+    "message": "Ajouter"
+  },
+  "allowlistEmpty": {
+    "message": "Aucun domaine autorisé"
+  },
+  "allowlistRemoveLabel": {
+    "message": "Supprimer"
+  },
+  "cleanCurrentTab": {
+    "message": "Nettoyer l'onglet actuel"
+  },
+  "cleanTabDone": {
+    "message": "$COUNT$ paramètre(s) supprimé(s) ✓",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "cleanTabAlreadyClean": {
+    "message": "Déjà propre ✓"
+  },
+  "cleanTabAllowlisted": {
+    "message": "Domaine en liste autorisée"
+  }
+}

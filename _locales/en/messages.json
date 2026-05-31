@@ -1,0 +1,65 @@
+{
+  "extName": {
+    "message": "LinkSanitizer"
+  },
+  "extDescription": {
+    "message": "Automatically strips tracking parameters (utm_*, fbclid, gclid, etc.) from URLs before the page loads."
+  },
+  "statusActive": {
+    "message": "Active"
+  },
+  "statusPaused": {
+    "message": "Paused"
+  },
+  "counterLabel": {
+    "message": "Tracking parameters removed"
+  },
+  "counterUnit": {
+    "message": "params"
+  },
+  "counterSublabel": {
+    "message": "across all your browsing sessions"
+  },
+  "paramsBeingStripped": {
+    "message": "Params being stripped"
+  },
+  "resetCounter": {
+    "message": "Reset Counter"
+  },
+  "resetting": {
+    "message": "Resetting…"
+  },
+  "allowlistTitle": {
+    "message": "Allowlisted Domains"
+  },
+  "allowlistHint": {
+    "message": "Tracking params are kept on these sites"
+  },
+  "allowlistPlaceholder": {
+    "message": "e.g. example.com"
+  },
+  "allowlistAdd": {
+    "message": "Add"
+  },
+  "allowlistEmpty": {
+    "message": "No domains allowlisted yet"
+  },
+  "allowlistRemoveLabel": {
+    "message": "Remove"
+  },
+  "cleanCurrentTab": {
+    "message": "Clean Current Tab"
+  },
+  "cleanTabDone": {
+    "message": "Removed $COUNT$ param(s) ✓",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "cleanTabAlreadyClean": {
+    "message": "Already clean ✓"
+  },
+  "cleanTabAllowlisted": {
+    "message": "Domain is allowlisted"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "extName": {
+    "message": "LinkSanitizer"
+  },
+  "extDescription": {
+    "message": "Elimina automáticamente los parámetros de rastreo (utm_*, fbclid, gclid, etc.) de las URL antes de que se cargue la página."
+  },
+  "statusActive": {
+    "message": "Activo"
+  },
+  "statusPaused": {
+    "message": "En pausa"
+  },
+  "counterLabel": {
+    "message": "Parámetros de rastreo eliminados"
+  },
+  "counterUnit": {
+    "message": "param"
+  },
+  "counterSublabel": {
+    "message": "en todas tus sesiones de navegación"
+  },
+  "paramsBeingStripped": {
+    "message": "Parámetros eliminados"
+  },
+  "resetCounter": {
+    "message": "Reiniciar contador"
+  },
+  "resetting": {
+    "message": "Reiniciando…"
+  },
+  "allowlistTitle": {
+    "message": "Dominios permitidos"
+  },
+  "allowlistHint": {
+    "message": "Los parámetros de rastreo se conservan en estos sitios"
+  },
+  "allowlistPlaceholder": {
+    "message": "ej. ejemplo.com"
+  },
+  "allowlistAdd": {
+    "message": "Añadir"
+  },
+  "allowlistEmpty": {
+    "message": "Aún no hay dominios permitidos"
+  },
+  "allowlistRemoveLabel": {
+    "message": "Eliminar"
+  },
+  "cleanCurrentTab": {
+    "message": "Limpiar pestaña actual"
+  },
+  "cleanTabDone": {
+    "message": "Eliminado(s) $COUNT$ parámetro(s) ✓",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "cleanTabAlreadyClean": {
+    "message": "Ya está limpio ✓"
+  },
+  "cleanTabAllowlisted": {
+    "message": "Dominio en la lista permitida"
+  }
+}
