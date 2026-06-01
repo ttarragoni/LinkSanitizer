@@ -1,122 +1,335 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" href="popup.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinkSanitizer</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    :root {
+      --green:        #00ff9d;
+      --red:          #e53e3e;
+      --bg:           #0d1117;
+      --surface:      #161b22;
+      --border:       #30363d;
+      --text:         #e6edf3;
+      --muted:        #8b949e;
+      --reset-border: #4a5568;
+    }
+ 
     body {
-      padding: 15px;
-      box-sizing: border-box;
+      font-family: 'Courier New', Courier, monospace;
+      background: var(--bg);
+      color: var(--text);
       min-width: 320px;
+      width: 340px;
+      padding: 15px;
+      overflow-x: hidden;
     }
-    input[type="checkbox"] {
-      accent-color: #00ff9d;
+ 
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .logo { display: flex; align-items: center; gap: 6px; }
+    .logo-icon { font-size: 18px; }
+    .logo-text {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--green);
+      text-transform: uppercase;
+    }
+ 
+    /* ── Toggle ── */
+    .toggle-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    #enabledToggle {
+      width: 18px; height: 18px;
       cursor: pointer;
-      width: 16px;
-      height: 16px;
+      accent-color: var(--green);
     }
-    .counter-box {
+    #toggleStatus {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    #toggleStatus.active { color: var(--green); }
+    #toggleStatus.paused { color: var(--red); }
+ 
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 10px 0; }
+ 
+    /* ── Counter ── */
+    .counter-section {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       text-align: center;
-      margin: 20px 0;
-    }
-    .counter-number {
-      font-size: 32px;
-      font-weight: bold;
-      margin-bottom: 4px;
+      gap: 4px;
+      padding: 4px 0;
     }
     .counter-label {
-      font-size: 12px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #718096;
     }
-    .action-buttons {
+    .counter-value {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--green);
+      line-height: 1;
+      display: block;
+    }
+    .counter-value.bump { animation: bump 0.32s ease; }
+    @keyframes bump {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+    .counter-value.loading { opacity: 0.4; }
+    .counter-unit {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+ 
+    /* ── Buttons ── */
+    .btn-row { display: flex; gap: 8px; margin-top: 10px; width: 100%; }
+    .btn {
+      flex: 1;
+      padding: 7px 6px;
+      border-radius: 5px;
+      border: 1px solid;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, border-color 0.18s, opacity 0.18s;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-clean {
+      background: rgba(0,255,157,0.1);
+      color: var(--green);
+      border-color: var(--green);
+    }
+    .btn-clean:hover:not(:disabled) { background: rgba(0,255,157,0.22); }
+    .btn-reset {
+      background: #1a202c;
+      color: var(--muted);
+      border-color: var(--reset-border);
+    }
+    .btn-reset:hover:not(:disabled) { color: var(--red); border-color: var(--red); }
+ 
+    .clean-feedback {
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      min-height: 14px;
+      text-align: center;
+      margin-top: 4px;
+      color: transparent;
+      transition: color 0.2s;
+    }
+    .clean-feedback.visible.success { color: var(--green); }
+    .clean-feedback.visible.neutral { color: var(--muted); }
+    .clean-feedback.visible.warning { color: #f6ad55; }
+ 
+    /* ── Params grid ── */
+    .params-section { padding: 2px 0; }
+    .params-title {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+    .params-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+    .param-tag {
+      background: rgba(0,255,157,0.07);
+      border: 1px solid rgba(0,255,157,0.2);
+      color: var(--green);
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      letter-spacing: 0.04em;
+    }
+ 
+    /* ── Allowlist ── */
+    .allowlist-section { padding: 2px 0; }
+    .section-title {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .allowlist-hint {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 7px;
+      line-height: 1.4;
+    }
+    .allowlist-input-row { display: flex; gap: 6px; }
+    .allowlist-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 5px 8px;
+      outline: none;
+      transition: border-color 0.18s;
+    }
+    .allowlist-input:focus { border-color: var(--green); }
+    .allowlist-input.shake { animation: shake 0.35s ease; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-5px); }
+      40%     { transform: translateX(5px); }
+      60%     { transform: translateX(-4px); }
+      80%     { transform: translateX(4px); }
+    }
+    .btn-add {
+      background: rgba(0,255,157,0.1);
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .btn-add:hover { background: rgba(0,255,157,0.22); }
+ 
+    .allowlist-items {
+      list-style: none;
+      margin-top: 8px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-top: 15px;
-      width: 100%;
+      gap: 4px;
+      max-height: 110px;
+      overflow-y: auto;
     }
-    .btn-secondary-custom {
-      width: 100%;
-      background: #1a202c;
-      color: #a0aec0;
-      border: 1px solid #4a5568;
-      padding: 10px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      font-family: sans-serif;
-      font-size: 12px;
+    .allowlist-items::-webkit-scrollbar { width: 4px; }
+    .allowlist-items::-webkit-scrollbar-track { background: transparent; }
+    .allowlist-items::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+ 
+    .allowlist-item {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-    }
-    .btn-secondary-custom:hover {
-      border-color: #e53e3e;
-      color: #e53e3e;
-      background: #2d3748;
-    }
-    /* Stile Sezione Whitelist */
-    .whitelist-section {
-      margin-top: 20px;
-      border-top: 1px solid #2d3748;
-      padding-top: 15px;
-    }
-    .whitelist-title {
-      font-size: 12px;
-      color: #a0aec0;
-      margin-bottom: 8px;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-    .whitelist-textarea {
-      width: 100%;
-      height: 60px;
-      background: #1a202c;
-      border: 1px solid #4a5568;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 4px;
-      color: #fff;
-      padding: 8px;
-      font-family: monospace;
-      font-size: 11px;
-      resize: none;
-      box-sizing: border-box;
+      padding: 4px 8px;
+      transition: opacity 0.18s;
     }
-    .whitelist-textarea:focus {
-      border-color: #00ff9d;
-      outline: none;
+    .allowlist-item.removing { opacity: 0; }
+    .allowlist-domain { font-size: 11px; color: var(--text); }
+    .allowlist-remove {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 15px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 2px;
+      transition: color 0.15s;
     }
+    .allowlist-remove:hover { color: var(--red); }
+    .allowlist-empty {
+      font-size: 10px;
+      color: var(--muted);
+      padding: 4px 0;
+      letter-spacing: 0.04em;
+    }
+ 
+    /* ── Disabled state ── */
+    .container.is-disabled .counter-value { opacity: 0.35; }
+    .container.is-disabled .btn-clean     { opacity: 0.35; pointer-events: none; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>LinkSanitizer</h1>
-    <input type="checkbox" id="toggleStatus" checked>
+  <div class="container" id="container">
+ 
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">LinkSanitizer</span>
+      </div>
+      <div class="toggle-wrap">
+        <input type="checkbox" id="enabledToggle" checked />
+        <span id="toggleStatus" class="active"></span>
+      </div>
+    </header>
+ 
+    <div class="divider"></div>
+ 
+    <section class="counter-section">
+      <p class="counter-label" id="counterLabel"></p>
+      <span class="counter-value" id="counterValue">—</span>
+      <span class="counter-unit" id="counterUnit"></span>
+      <div class="btn-row">
+        <button class="btn btn-clean" id="cleanTabBtn"></button>
+        <button class="btn btn-reset" id="resetBtn"></button>
+      </div>
+      <p class="clean-feedback" id="cleanFeedback"></p>
+    </section>
+ 
+    <div class="divider"></div>
+ 
+    <section class="params-section">
+      <p class="params-title" id="paramsTitle"></p>
+      <div class="params-grid">
+        <span class="param-tag">utm_source</span>
+        <span class="param-tag">utm_medium</span>
+        <span class="param-tag">utm_campaign</span>
+        <span class="param-tag">utm_term</span>
+        <span class="param-tag">utm_content</span>
+        <span class="param-tag">fbclid</span>
+        <span class="param-tag">gclid</span>
+        <span class="param-tag">msclkid</span>
+        <span class="param-tag">twclid</span>
+        <span class="param-tag">_ga</span>
+        <span class="param-tag">igshid</span>
+        <span class="param-tag">+ more</span>
+      </div>
+    </section>
+ 
+    <div class="divider"></div>
+ 
+    <section class="allowlist-section">
+      <p class="section-title" id="allowlistTitle"></p>
+      <p class="allowlist-hint" id="allowlistHint"></p>
+      <div class="allowlist-input-row">
+        <input
+          type="text"
+          id="allowlistInput"
+          class="allowlist-input"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="btn-add" id="allowlistAddBtn">+</button>
+      </div>
+      <ul class="allowlist-items" id="allowlistItems"></ul>
+    </section>
+ 
   </div>
-  <div class="status-text" id="statusLabel">● ATTIVO</div>
-  
-  <div class="counter-box">
-    <div id="counter" class="counter-number">0</div>
-    <div class="counter-label">Parametri rimossi</div>
-  </div>
-
-  <div class="action-buttons">
-    <button id="btnCleanTab" class="btn-primary">⚡ Pulisci scheda corrente</button>
-    <button id="btnResetCounter" class="btn-secondary-custom">🔄 Azzera contatore</button>
-  </div>
-
-  <div class="whitelist-section">
-    <div class="whitelist-title">🛡️ Tuo Elenco Esclusioni (un sito per riga)</div>
-    <textarea id="txtWhitelist" class="whitelist-textarea" placeholder="esempio.it&#10;repubblica.it"></textarea>
-  </div>
-
   <script src="popup.js"></script>
 </body>
 </html>

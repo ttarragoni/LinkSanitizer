@@ -3,63 +3,69 @@
     "message": "LinkSanitizer"
   },
   "extDescription": {
-    "message": "Automatically strips tracking parameters (utm_*, fbclid, gclid, etc.) from URLs before the page loads."
+    "message": "Automatically strips tracking parameters (utm_*, fbclid, gclid, etc.) from URLs without reloading the page."
   },
   "statusActive": {
-    "message": "Active"
+    "message": "● ACTIVE"
   },
   "statusPaused": {
-    "message": "Paused"
+    "message": "○ DISABLED"
   },
   "counterLabel": {
     "message": "Tracking parameters removed"
   },
   "counterUnit": {
-    "message": "params"
-  },
-  "counterSublabel": {
-    "message": "across all your browsing sessions"
+    "message": "total since installation"
   },
   "paramsBeingStripped": {
     "message": "Params being stripped"
   },
   "resetCounter": {
-    "message": "Reset Counter"
+    "message": "🔄 Reset counter"
   },
   "resetting": {
-    "message": "Resetting…"
+    "message": "⏳ Resetting…"
   },
   "allowlistTitle": {
-    "message": "Allowlisted Domains"
+    "message": "Domain whitelist"
   },
   "allowlistHint": {
-    "message": "Tracking params are kept on these sites"
+    "message": "The extension is fully disabled for domains added here. PayPal, Stripe and checkout sites are always protected."
   },
   "allowlistPlaceholder": {
     "message": "e.g. example.com"
   },
   "allowlistAdd": {
-    "message": "Add"
+    "message": "+"
   },
   "allowlistEmpty": {
-    "message": "No domains allowlisted yet"
+    "message": "No domains in the whitelist."
   },
   "allowlistRemoveLabel": {
     "message": "Remove"
   },
   "cleanCurrentTab": {
-    "message": "Clean Current Tab"
+    "message": "⚡ Clean current tab"
   },
   "cleanTabDone": {
-    "message": "Removed $COUNT$ param(s) ✓",
+    "message": "✓ Removed $COUNT$ param(s)",
     "placeholders": {
-      "count": { "content": "$1", "example": "3" }
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
     }
   },
   "cleanTabAlreadyClean": {
-    "message": "Already clean ✓"
+    "message": "✓ URL already clean"
   },
   "cleanTabAllowlisted": {
-    "message": "Domain is allowlisted"
+    "message": "⚠ Domain is whitelisted"
+  },
+  "cleanTabHardBlocked": {
+    "message": "🔒 Protected site (payment)"
+  },
+  "cleanTabDisabled": {
+    "message": "— Extension is disabled"
   }
 }

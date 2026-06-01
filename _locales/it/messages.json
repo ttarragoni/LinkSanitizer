@@ -3,63 +3,69 @@
     "message": "LinkSanitizer"
   },
   "extDescription": {
-    "message": "Rimuove automaticamente i parametri di tracciamento (utm_*, fbclid, gclid, ecc.) dagli URL prima che la pagina si carichi."
+    "message": "Rimuove automaticamente i parametri di tracciamento (utm_*, fbclid, gclid, ecc.) dagli URL senza ricaricare la pagina."
   },
   "statusActive": {
-    "message": "Attivo"
+    "message": "● ATTIVO"
   },
   "statusPaused": {
-    "message": "In pausa"
+    "message": "○ DISATTIVATO"
   },
   "counterLabel": {
     "message": "Parametri di tracciamento rimossi"
   },
   "counterUnit": {
-    "message": "param"
-  },
-  "counterSublabel": {
-    "message": "in tutte le tue sessioni di navigazione"
+    "message": "totale dall'installazione"
   },
   "paramsBeingStripped": {
     "message": "Parametri rimossi"
   },
   "resetCounter": {
-    "message": "Azzera contatore"
+    "message": "🔄 Azzera contatore"
   },
   "resetting": {
-    "message": "Azzeramento…"
+    "message": "⏳ Azzeramento…"
   },
   "allowlistTitle": {
-    "message": "Domini consentiti"
+    "message": "Whitelist domini"
   },
   "allowlistHint": {
-    "message": "I parametri di tracciamento vengono mantenuti su questi siti"
+    "message": "L'estensione si disattiva completamente per i domini aggiunti qui. I siti PayPal, Stripe e checkout sono sempre protetti."
   },
   "allowlistPlaceholder": {
     "message": "es. esempio.com"
   },
   "allowlistAdd": {
-    "message": "Aggiungi"
+    "message": "+"
   },
   "allowlistEmpty": {
-    "message": "Nessun dominio consentito"
+    "message": "Nessun dominio nella whitelist."
   },
   "allowlistRemoveLabel": {
     "message": "Rimuovi"
   },
   "cleanCurrentTab": {
-    "message": "Pulisci scheda corrente"
+    "message": "⚡ Pulisci scheda corrente"
   },
   "cleanTabDone": {
-    "message": "Rimossi $COUNT$ parametro/i ✓",
+    "message": "✓ Rimossi $COUNT$ parametro/i",
     "placeholders": {
-      "count": { "content": "$1", "example": "3" }
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
     }
   },
   "cleanTabAlreadyClean": {
-    "message": "Già pulito ✓"
+    "message": "✓ URL già pulito"
   },
   "cleanTabAllowlisted": {
-    "message": "Dominio nella lista consentita"
+    "message": "⚠ Dominio nella whitelist"
+  },
+  "cleanTabHardBlocked": {
+    "message": "🔒 Sito protetto (pagamento)"
+  },
+  "cleanTabDisabled": {
+    "message": "— Estensione disattivata"
   }
 }

@@ -3,63 +3,69 @@
     "message": "LinkSanitizer"
   },
   "extDescription": {
-    "message": "Elimina automáticamente los parámetros de rastreo (utm_*, fbclid, gclid, etc.) de las URL antes de que se cargue la página."
+    "message": "Elimina automáticamente los parámetros de rastreo (utm_*, fbclid, gclid, etc.) de las URL sin recargar la página."
   },
   "statusActive": {
-    "message": "Activo"
+    "message": "● ACTIVO"
   },
   "statusPaused": {
-    "message": "En pausa"
+    "message": "○ DESACTIVADO"
   },
   "counterLabel": {
     "message": "Parámetros de rastreo eliminados"
   },
   "counterUnit": {
-    "message": "param"
-  },
-  "counterSublabel": {
-    "message": "en todas tus sesiones de navegación"
+    "message": "total desde la instalación"
   },
   "paramsBeingStripped": {
     "message": "Parámetros eliminados"
   },
   "resetCounter": {
-    "message": "Reiniciar contador"
+    "message": "🔄 Reiniciar contador"
   },
   "resetting": {
-    "message": "Reiniciando…"
+    "message": "⏳ Reiniciando…"
   },
   "allowlistTitle": {
-    "message": "Dominios permitidos"
+    "message": "Lista blanca de dominios"
   },
   "allowlistHint": {
-    "message": "Los parámetros de rastreo se conservan en estos sitios"
+    "message": "La extensión se desactiva completamente para los dominios añadidos aquí. Los sitios de PayPal, Stripe y checkout siempre están protegidos."
   },
   "allowlistPlaceholder": {
     "message": "ej. ejemplo.com"
   },
   "allowlistAdd": {
-    "message": "Añadir"
+    "message": "+"
   },
   "allowlistEmpty": {
-    "message": "Aún no hay dominios permitidos"
+    "message": "No hay dominios en la lista blanca."
   },
   "allowlistRemoveLabel": {
     "message": "Eliminar"
   },
   "cleanCurrentTab": {
-    "message": "Limpiar pestaña actual"
+    "message": "⚡ Limpiar pestaña actual"
   },
   "cleanTabDone": {
-    "message": "Eliminado(s) $COUNT$ parámetro(s) ✓",
+    "message": "✓ Eliminado(s) $COUNT$ parámetro(s)",
     "placeholders": {
-      "count": { "content": "$1", "example": "3" }
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
     }
   },
   "cleanTabAlreadyClean": {
-    "message": "Ya está limpio ✓"
+    "message": "✓ URL ya está limpio"
   },
   "cleanTabAllowlisted": {
-    "message": "Dominio en la lista permitida"
+    "message": "⚠ Dominio en lista blanca"
+  },
+  "cleanTabHardBlocked": {
+    "message": "🔒 Sitio protegido (pago)"
+  },
+  "cleanTabDisabled": {
+    "message": "— Extensión desactivada"
   }
 }
