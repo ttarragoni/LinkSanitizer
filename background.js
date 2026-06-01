@@ -1,21 +1,38 @@
 /**
- * LinkSanitizer — background service worker (Manifest V3 v2.1)
+ * LinkSanitizer — background service worker (Manifest V3 v2.2)
  *
- * FIX v2.1: allowlist is always read fresh from storage before every check.
- * This eliminates "ghost" entries caused by the MV3 service worker being
- * suspended and waking up with a stale in-memory allowlist array.
+ * FIX v2.2: resolves the race condition on ultra-fast pages (Wikipedia etc.).
  *
- * The in-memory copy is still kept for the syncState() boot path and for
- * operations that modify the list, but isAllowlisted() now reads storage
- * directly so it is always authoritative.
+ * ROOT CAUSE:
+ *   On fast pages the content script context is destroyed before
+ *   chrome.runtime.sendMessage() can be fully processed by the SW.
+ *   The counter write was lost in transit.
+ *
+ * SOLUTION — dual-path badge update:
+ *   • Counter: now written atomically by content.js directly to storage.
+ *     No message passing needed for the critical persist operation.
+ *   • Badge:   PRIMARY path → BADGE_UPDATE message (arrives on normal pages).
+ *              FALLBACK path → storage.onChanged fires on cleanedCount change,
+ *              which is reliable even when the message never arrives.
+ *              The fallback uses a per-tab "pending" registry to know which
+ *              tab to badge, populated by tabs.onUpdated("loading").
+ *
+ * All allowlist, hard-block, and CLEAN_TAB logic unchanged from v2.1.
  */
 
 /* ── Badge config ─────────────────────────────────────────────────────────── */
 const BADGE_BG = "#00ff9d";
 const BADGE_FG = "#000000";
 
-/** Per-tab cleaned count (in-memory, resets on SW restart — intentional) */
+/** Per-tab accumulated badge count (in-memory, resets on SW restart) */
 const tabCounts = {};
+
+/**
+ * Registry of tabs that started loading but haven't yet received a BADGE_UPDATE.
+ * Key: tabId. Value: { windowId, badgedViaMessage: bool }
+ * Used by the storage.onChanged fallback to find the right tab.
+ */
+const pendingBadge = {}; // tabId → { badgedViaMessage: boolean }
 
 function updateBadge(tabId, delta) {
   tabCounts[tabId] = (tabCounts[tabId] ?? 0) + delta;
@@ -26,15 +43,25 @@ function updateBadge(tabId, delta) {
   chrome.action.setBadgeTextColor({ color: BADGE_FG, tabId });
 }
 
+// When a tab starts loading a new URL: reset its badge and register it
+// as "pending" so the storage.onChanged fallback can find it.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === "loading" && changeInfo.url) {
     tabCounts[tabId] = 0;
     chrome.action.setBadgeText({ text: "", tabId });
+    // Register as pending — will be resolved via BADGE_UPDATE or storage fallback
+    pendingBadge[tabId] = { badgedViaMessage: false };
+  }
+  // Once the page is fully loaded, clean up the pending entry after a short
+  // grace period (badge may still arrive slightly after "complete")
+  if (changeInfo.status === "complete") {
+    setTimeout(() => { delete pendingBadge[tabId]; }, 3000);
   }
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   delete tabCounts[tabId];
+  delete pendingBadge[tabId];
 });
 
 /* ── In-memory state ─────────────────────────────────────────────────────── */
@@ -47,11 +74,36 @@ async function syncState() {
   allowlist        = result.allowlist;
 }
 
-// Keep in-memory copy in sync whenever storage changes
+/**
+ * storage.onChanged listener — two jobs:
+ *  1. Keep in-memory enabled/allowlist in sync.
+ *  2. BADGE FALLBACK: when cleanedCount rises, badge the most recently
+ *     loaded tab that hasn't already been badged via a direct message.
+ *     This fires reliably even when the BADGE_UPDATE message was lost.
+ */
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local") return;
+
   if (changes.enabled   != null) sanitizerEnabled = changes.enabled.newValue;
   if (changes.allowlist != null) allowlist         = changes.allowlist.newValue ?? [];
+
+  if (changes.cleanedCount != null) {
+    const prev  = changes.cleanedCount.oldValue ?? 0;
+    const next  = changes.cleanedCount.newValue ?? 0;
+    const delta = next - prev;
+    if (delta <= 0) return;
+
+    // Find pending tabs that haven't been badged via the direct message yet
+    const waiting = Object.entries(pendingBadge)
+      .filter(([, v]) => !v.badgedViaMessage);
+
+    if (waiting.length > 0) {
+      // Badge the last one registered (most recently navigated tab)
+      const tabId = Number(waiting[waiting.length - 1][0]);
+      updateBadge(tabId, delta);
+      pendingBadge[tabId].badgedViaMessage = true; // mark as resolved
+    }
+  }
 });
 
 syncState();
@@ -67,19 +119,11 @@ function domainMatchesEntry(hostname, entry) {
   return host === norm || host.endsWith("." + norm);
 }
 
-/**
- * Always reads allowlist fresh from storage.
- * This is the key fix: the SW may wake from suspension with a stale
- * in-memory array, so we never trust it for the actual gate check.
- */
 async function isAllowlistedFresh(rawUrl) {
   let hostname;
   try { hostname = new URL(rawUrl).hostname; } catch { return false; }
-
   const { allowlist: stored } = await chrome.storage.local.get({ allowlist: [] });
-  // Also sync in-memory copy while we're here
   allowlist = stored;
-
   if (stored.length === 0) return false;
   return stored.some((entry) => domainMatchesEntry(hostname, entry));
 }
@@ -90,7 +134,7 @@ async function incrementCounter(count) {
   await chrome.storage.local.set({ cleanedCount: cleanedCount + count });
 }
 
-/* ── Tracking params (for on-demand CLEAN_TAB only) ─────────────────────── */
+/* ── Tracking params (CLEAN_TAB only) ───────────────────────────────────── */
 const TRACKING_PARAMS = [
   "utm_source","utm_medium","utm_campaign","utm_term","utm_content",
   "utm_id","utm_source_platform","utm_creative_format","utm_marketing_tactic",
@@ -121,11 +165,21 @@ function sanitizeUrl(rawUrl) {
 /* ── Message handler ─────────────────────────────────────────────────────── */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
-  /* Content script: params were cleaned on a page */
-  if (message.type === "PARAMS_CLEANED") {
+  /**
+   * BADGE_UPDATE — sent by content script after a successful clean.
+   * Counter is already written to storage by content.js directly.
+   * This message only drives the badge (best-effort, fast path).
+   */
+  if (message.type === "BADGE_UPDATE") {
+    const tabId = sender.tab?.id;
     const count = message.count ?? 0;
-    incrementCounter(count);
-    if (sender.tab?.id) updateBadge(sender.tab.id, count);
+    if (tabId && count > 0) {
+      updateBadge(tabId, count);
+      // Mark as resolved so storage.onChanged fallback doesn't double-badge
+      if (pendingBadge[tabId]) {
+        pendingBadge[tabId].badgedViaMessage = true;
+      }
+    }
     sendResponse({ ok: true });
     return false;
   }
@@ -135,7 +189,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.storage.local
       .get({ cleanedCount: 0, enabled: true, allowlist: [] })
       .then((result) => {
-        // Sync in-memory state while we're at it
         sanitizerEnabled = result.enabled;
         allowlist        = result.allowlist;
         sendResponse(result);
@@ -156,24 +209,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "ALLOWLIST_ADD") {
     const domain = normaliseDomain(message.domain ?? "");
     if (!domain) { sendResponse({ success: false, reason: "empty" }); return false; }
-
-    // Always read from storage first to avoid race conditions
     chrome.storage.local.get({ allowlist: [] }).then(({ allowlist: stored }) => {
       const updated = Array.from(new Set([...stored, domain]));
-      allowlist = updated; // sync in-memory
+      allowlist = updated;
       chrome.storage.local.set({ allowlist: updated })
         .then(() => sendResponse({ success: true, allowlist: updated }));
     });
     return true;
   }
 
-  /* Popup: remove domain — reads storage first, writes back, syncs memory */
+  /* Popup: remove domain */
   if (message.type === "ALLOWLIST_REMOVE") {
     const domain = normaliseDomain(message.domain ?? "");
-
     chrome.storage.local.get({ allowlist: [] }).then(({ allowlist: stored }) => {
       const updated = stored.filter((d) => normaliseDomain(d) !== domain);
-      allowlist = updated; // sync in-memory immediately
+      allowlist = updated;
       chrome.storage.local.set({ allowlist: updated })
         .then(() => sendResponse({ success: true, allowlist: updated }));
     });
@@ -183,20 +233,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   /* Popup: clean current tab on demand */
   if (message.type === "CLEAN_TAB") {
     chrome.tabs.query({ active: true, currentWindow: true }).then(async ([tab]) => {
-      if (!tab?.url)           { sendResponse({ status: "no_url" });      return; }
+      if (!tab?.url)              { sendResponse({ status: "no_url" });      return; }
       if (isHardBlocked(tab.url)) { sendResponse({ status: "hard_blocked" }); return; }
 
-      // Re-read enabled flag fresh from storage
       const { enabled } = await chrome.storage.local.get({ enabled: true });
-      if (!enabled)            { sendResponse({ status: "disabled" });    return; }
-
+      if (!enabled)               { sendResponse({ status: "disabled" });    return; }
       if (await isAllowlistedFresh(tab.url)) {
-        sendResponse({ status: "allowlisted" });
-        return;
+        sendResponse({ status: "allowlisted" }); return;
       }
 
       const { cleanUrl, removed } = sanitizeUrl(tab.url);
-      if (removed.length === 0) { sendResponse({ status: "already_clean" }); return; }
+      if (removed.length === 0)   { sendResponse({ status: "already_clean" }); return; }
 
       try {
         await chrome.scripting.executeScript({
