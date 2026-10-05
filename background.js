@@ -136,11 +136,9 @@ async function incrementCounter(count) {
 
 /* ── Tracking params (CLEAN_TAB only) ───────────────────────────────────── */
 const TRACKING_PARAMS = [
-  "utm_source","utm_medium","utm_campaign","utm_term","utm_content",
-  "utm_id","utm_source_platform","utm_creative_format","utm_marketing_tactic",
-  "fbclid","gclid","gclsrc","dclid","gbraid","wbraid",
-  "msclkid","twclid","mc_eid","mc_cid","ref",
-  "_ga","_gl","igshid","s_cid","yclid","zanpid",
+  'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+  'fbclid', 'gclid', 'msclkid', 'twclid', 'igshid', '_ga',
+  'si', 'igsh', 'gbraid', 'wbraid', 'ttclid', 'li_fat_id', 'rdt_cid', 'mc_eid', '_hsenc'
 ];
 
 const HARD_BLOCK_KEYWORDS = ["paypal", "stripe", "checkout"];

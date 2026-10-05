@@ -227,45 +227,61 @@ body {
 .clean-feedback.visible.neutral { color: var(--muted); }
 .clean-feedback.visible.warning { color: #f6ad55; }
 
-/* ── Params accordion (<details>) ────────────────────────────────────────── */
-.params-section { padding: 2px 0; }
+/* ── Params horizontal scroll row ────────────────────────────── */
+.params-section { padding: 4px 0; }
 
-.params-details { border: none; }
+.params-header {
+  margin-bottom: 8px;
+}
 
 .params-summary {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   color: var(--muted);
   text-transform: uppercase;
-  cursor: pointer;
-  list-style: none;           /* hide default marker */
-  display: flex;
-  align-items: center;
-  gap: 6px;
   user-select: none;
-  padding: 3px 0;
-  transition: color 0.15s;
 }
-.params-summary::-webkit-details-marker { display: none; }
 
-/* Custom arrow */
-.params-summary::before {
-  content: "▶";
-  font-size: 8px;
-  display: inline-block;
-  transition: transform 0.2s;
-  color: var(--muted);
-}
-.params-details[open] .params-summary::before { transform: rotate(90deg); }
-.params-summary:hover { color: var(--text); }
-.params-summary:hover::before { color: var(--text); }
-
-.params-grid {
+.params-scroll-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 9px;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.params-scroll-row::-webkit-scrollbar {
+  height: 4px;
+}
+
+.params-scroll-row::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.params-scroll-row::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.params-scroll-row::-webkit-scrollbar-thumb:hover {
+  background: var(--green);
+}
+
+.param-tag {
+  flex-shrink: 0;
+  white-space: nowrap;
+  background: rgba(0, 255, 157, 0.07);
+  border: 1px solid rgba(0, 255, 157, 0.2);
+  color: var(--green);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: monospace;
 }
 
 .param-tag {

@@ -32,12 +32,13 @@
   if (HARD_BLOCK_KEYWORDS.some((kw) => window.location.href.toLowerCase().includes(kw))) return;
  
   /* ── Tracking params ──────────────────────────────────────────────────── */
-  const TRACKING_PARAMS = new Set([
+const TRACKING_PARAMS = new Set([
     "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
     "utm_id", "utm_source_platform", "utm_creative_format", "utm_marketing_tactic",
     "fbclid", "gclid", "gclsrc", "dclid", "gbraid", "wbraid",
     "msclkid", "twclid", "mc_eid", "mc_cid", "ref",
     "_ga", "_gl", "igshid", "s_cid", "yclid", "zanpid",
+    "si", "igsh", "ttclid", "li_fat_id", "rdt_cid", "_hsenc"
   ]);
  
   /* ── Helpers ──────────────────────────────────────────────────────────── */
