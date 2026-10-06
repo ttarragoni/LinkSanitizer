@@ -9,7 +9,7 @@
     "message": "● ACTIF"
   },
   "statusPaused": {
-    "message": "○ DÉSACTIVÉ"
+    "message": "○ EN PAUSE"
   },
   "counterLabel": {
     "message": "Paramètres de suivi supprimés"
@@ -18,34 +18,37 @@
     "message": "total depuis l'installation"
   },
   "paramsBeingStripped": {
-    "message": "Paramètres supprimés"
+    "message": "Paramètres surveillés"
   },
   "resetCounter": {
-    "message": "🔄 Réinitialiser"
+    "message": "🔄 Réinitialiser le compteur"
   },
   "resetting": {
     "message": "⏳ Réinitialisation…"
   },
   "allowlistTitle": {
-    "message": "Liste blanche de domaines"
+    "message": "Liste des domaines autorisés"
   },
   "allowlistHint": {
-    "message": "L'extension est complètement désactivée pour les domaines ajoutés ici. Les sites PayPal, Stripe et checkout sont toujours protégés."
+    "message": "L'extension est désactivée pour les domaines ajoutés ici. PayPal, Stripe et les pages de paiement sont toujours protégés."
   },
   "allowlistPlaceholder": {
-    "message": "ex. exemple.com"
+    "message": "ex. example.com"
   },
   "allowlistAdd": {
     "message": "+"
   },
   "allowlistEmpty": {
-    "message": "Aucun domaine dans la liste blanche."
+    "message": "Aucun domaine dans la liste."
   },
   "allowlistRemoveLabel": {
     "message": "Supprimer"
   },
   "cleanCurrentTab": {
     "message": "⚡ Nettoyer l'onglet actuel"
+  },
+  "cleanClipboardBtn": {
+    "message": "📋 Nettoyer le presse-papiers"
   },
   "cleanTabDone": {
     "message": "✓ $COUNT$ paramètre(s) supprimé(s)",
@@ -59,13 +62,22 @@
   "cleanTabAlreadyClean": {
     "message": "✓ URL déjà propre"
   },
+  "clipboardNoTrackers": {
+    "message": "✓ URL du presse-papiers déjà propre"
+  },
+  "clipboardNoUrl": {
+    "message": "⚠ Aucune URL valide dans le presse-papiers"
+  },
   "cleanTabAllowlisted": {
-    "message": "⚠ Domaine en liste blanche"
+    "message": "⚠ Domaine dans la liste autorisée"
   },
   "cleanTabHardBlocked": {
     "message": "🔒 Site protégé (paiement)"
   },
   "cleanTabDisabled": {
     "message": "— Extension désactivée"
+  },
+  "feedbackLink": {
+    "message": "Feedback & Signaler un tracker ➔"
   }
 }

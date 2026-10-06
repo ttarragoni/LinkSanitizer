@@ -47,6 +47,9 @@
   "cleanCurrentTab": {
     "message": "⚡ Clean current tab"
   },
+  "cleanClipboardBtn": {
+    "message": "📋 Clean from clipboard"
+  },
   "cleanTabDone": {
     "message": "✓ Removed $COUNT$ param(s)",
     "placeholders": {
@@ -59,6 +62,12 @@
   "cleanTabAlreadyClean": {
     "message": "✓ URL already clean"
   },
+  "clipboardNoTrackers": {
+    "message": "✓ Clipboard URL already clean"
+  },
+  "clipboardNoUrl": {
+    "message": "⚠ No valid URL found in clipboard"
+  },
   "cleanTabAllowlisted": {
     "message": "⚠ Domain is whitelisted"
   },
@@ -67,5 +76,8 @@
   },
   "cleanTabDisabled": {
     "message": "— Extension is disabled"
+  },
+  "feedbackLink": {
+    "message": "Feedback & Report tracker ➔"
   }
 }

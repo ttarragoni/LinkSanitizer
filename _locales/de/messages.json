@@ -1,0 +1,83 @@
+{
+  "extName": {
+    "message": "LinkSanitizer"
+  },
+  "extDescription": {
+    "message": "Entfernt automatisch Tracking-Parameter (utm_*, fbclid, gclid usw.) aus URLs, ohne die Seite neu zu laden."
+  },
+  "statusActive": {
+    "message": "● AKTIV"
+  },
+  "statusPaused": {
+    "message": "○ PAUSIERT"
+  },
+  "counterLabel": {
+    "message": "Entfernte Tracking-Parameter"
+  },
+  "counterUnit": {
+    "message": "insgesamt seit Installation"
+  },
+  "paramsBeingStripped": {
+    "message": "Überwachte Parameter"
+  },
+  "resetCounter": {
+    "message": "🔄 Zähler zurücksetzen"
+  },
+  "resetting": {
+    "message": "⏳ Zurücksetzen…"
+  },
+  "allowlistTitle": {
+    "message": "Erlaubte Domains (Whitelist)"
+  },
+  "allowlistHint": {
+    "message": "Für hier hinzugefügte Domains ist die Erweiterung deaktiviert. PayPal, Stripe und Checkout-Seiten sind immer geschützt."
+  },
+  "allowlistPlaceholder": {
+    "message": "z. B. example.com"
+  },
+  "allowlistAdd": {
+    "message": "+"
+  },
+  "allowlistEmpty": {
+    "message": "Keine Domains auf der Whitelist."
+  },
+  "allowlistRemoveLabel": {
+    "message": "Entfernen"
+  },
+  "cleanCurrentTab": {
+    "message": "⚡ Aktuellen Tab bereinigen"
+  },
+  "cleanClipboardBtn": {
+    "message": "📋 Aus Zwischenablage bereinigen"
+  },
+  "cleanTabDone": {
+    "message": "✓ $COUNT$ Parameter entfernt",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "cleanTabAlreadyClean": {
+    "message": "✓ URL ist bereits sauber"
+  },
+  "clipboardNoTrackers": {
+    "message": "✓ Zwischenablage-URL bereits sauber"
+  },
+  "clipboardNoUrl": {
+    "message": "⚠ Keine gültige URL in der Zwischenablage"
+  },
+  "cleanTabAllowlisted": {
+    "message": "⚠ Domain steht auf der Whitelist"
+  },
+  "cleanTabHardBlocked": {
+    "message": "🔒 Geschützte Seite (Zahlung)"
+  },
+  "cleanTabDisabled": {
+    "message": "— Erweiterung ist deaktiviert"
+  },
+  "feedbackLink": {
+    "message": "Feedback & Tracker melden ➔"
+  }
+}

@@ -1,38 +1,13 @@
 /**
  * LinkSanitizer — background service worker (Manifest V3 v2.2)
- *
- * FIX v2.2: resolves the race condition on ultra-fast pages (Wikipedia etc.).
- *
- * ROOT CAUSE:
- *   On fast pages the content script context is destroyed before
- *   chrome.runtime.sendMessage() can be fully processed by the SW.
- *   The counter write was lost in transit.
- *
- * SOLUTION — dual-path badge update:
- *   • Counter: now written atomically by content.js directly to storage.
- *     No message passing needed for the critical persist operation.
- *   • Badge:   PRIMARY path → BADGE_UPDATE message (arrives on normal pages).
- *              FALLBACK path → storage.onChanged fires on cleanedCount change,
- *              which is reliable even when the message never arrives.
- *              The fallback uses a per-tab "pending" registry to know which
- *              tab to badge, populated by tabs.onUpdated("loading").
- *
- * All allowlist, hard-block, and CLEAN_TAB logic unchanged from v2.1.
  */
 
 /* ── Badge config ─────────────────────────────────────────────────────────── */
 const BADGE_BG = "#00ff9d";
 const BADGE_FG = "#000000";
 
-/** Per-tab accumulated badge count (in-memory, resets on SW restart) */
 const tabCounts = {};
-
-/**
- * Registry of tabs that started loading but haven't yet received a BADGE_UPDATE.
- * Key: tabId. Value: { windowId, badgedViaMessage: bool }
- * Used by the storage.onChanged fallback to find the right tab.
- */
-const pendingBadge = {}; // tabId → { badgedViaMessage: boolean }
+const pendingBadge = {};
 
 function updateBadge(tabId, delta) {
   tabCounts[tabId] = (tabCounts[tabId] ?? 0) + delta;
@@ -43,17 +18,12 @@ function updateBadge(tabId, delta) {
   chrome.action.setBadgeTextColor({ color: BADGE_FG, tabId });
 }
 
-// When a tab starts loading a new URL: reset its badge and register it
-// as "pending" so the storage.onChanged fallback can find it.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === "loading" && changeInfo.url) {
     tabCounts[tabId] = 0;
     chrome.action.setBadgeText({ text: "", tabId });
-    // Register as pending — will be resolved via BADGE_UPDATE or storage fallback
     pendingBadge[tabId] = { badgedViaMessage: false };
   }
-  // Once the page is fully loaded, clean up the pending entry after a short
-  // grace period (badge may still arrive slightly after "complete")
   if (changeInfo.status === "complete") {
     setTimeout(() => { delete pendingBadge[tabId]; }, 3000);
   }
@@ -74,13 +44,6 @@ async function syncState() {
   allowlist        = result.allowlist;
 }
 
-/**
- * storage.onChanged listener — two jobs:
- *  1. Keep in-memory enabled/allowlist in sync.
- *  2. BADGE FALLBACK: when cleanedCount rises, badge the most recently
- *     loaded tab that hasn't already been badged via a direct message.
- *     This fires reliably even when the BADGE_UPDATE message was lost.
- */
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local") return;
 
@@ -93,15 +56,13 @@ chrome.storage.onChanged.addListener((changes, area) => {
     const delta = next - prev;
     if (delta <= 0) return;
 
-    // Find pending tabs that haven't been badged via the direct message yet
     const waiting = Object.entries(pendingBadge)
       .filter(([, v]) => !v.badgedViaMessage);
 
     if (waiting.length > 0) {
-      // Badge the last one registered (most recently navigated tab)
       const tabId = Number(waiting[waiting.length - 1][0]);
       updateBadge(tabId, delta);
-      pendingBadge[tabId].badgedViaMessage = true; // mark as resolved
+      pendingBadge[tabId].badgedViaMessage = true;
     }
   }
 });
@@ -134,12 +95,15 @@ async function incrementCounter(count) {
   await chrome.storage.local.set({ cleanedCount: cleanedCount + count });
 }
 
-/* ── Tracking params (CLEAN_TAB only) ───────────────────────────────────── */
-const TRACKING_PARAMS = [
-  'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
-  'fbclid', 'gclid', 'msclkid', 'twclid', 'igshid', '_ga',
-  'si', 'igsh', 'gbraid', 'wbraid', 'ttclid', 'li_fat_id', 'rdt_cid', 'mc_eid', '_hsenc'
-];
+/* ── Tracking params (Allineati con content.js) ───────────────────────────── */
+const TRACKING_PARAMS = new Set([
+  "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+  "utm_id", "utm_source_platform", "utm_creative_format", "utm_marketing_tactic",
+  "fbclid", "gclid", "gclsrc", "dclid", "gbraid", "wbraid",
+  "msclkid", "twclid", "mc_eid", "mc_cid", "ref",
+  "_ga", "_gl", "igshid", "s_cid", "yclid", "zanpid",
+  "si", "igsh", "ttclid", "li_fat_id", "rdt_cid", "_hsenc"
+]);
 
 const HARD_BLOCK_KEYWORDS = ["paypal", "stripe", "checkout"];
 
@@ -147,33 +111,45 @@ function isHardBlocked(url) {
   return HARD_BLOCK_KEYWORDS.some((kw) => url.toLowerCase().includes(kw));
 }
 
+function isTrackingKey(key) {
+  const lower = key.toLowerCase();
+  return lower.startsWith("utm_") || TRACKING_PARAMS.has(lower);
+}
+
 function sanitizeUrl(rawUrl) {
   let url;
-  try { url = new URL(rawUrl); } catch { return { cleanUrl: rawUrl, removed: [] }; }
+  try {
+    url = new URL(rawUrl.trim());
+  } catch {
+    return { cleanUrl: rawUrl, removed: [] };
+  }
+
   const removed = [];
-  for (const param of TRACKING_PARAMS) {
-    if (url.searchParams.has(param)) {
-      url.searchParams.delete(param);
-      removed.push(param);
+  const keys = Array.from(url.searchParams.keys());
+
+  for (const key of keys) {
+    if (isTrackingKey(key)) {
+      url.searchParams.delete(key);
+      removed.push(key);
     }
   }
-  return { cleanUrl: url.toString(), removed };
+
+  let cleanUrl = url.toString();
+  if (cleanUrl.endsWith("?")) {
+    cleanUrl = cleanUrl.slice(0, -1);
+  }
+
+  return { cleanUrl, removed };
 }
 
 /* ── Message handler ─────────────────────────────────────────────────────── */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
-  /**
-   * BADGE_UPDATE — sent by content script after a successful clean.
-   * Counter is already written to storage by content.js directly.
-   * This message only drives the badge (best-effort, fast path).
-   */
   if (message.type === "BADGE_UPDATE") {
     const tabId = sender.tab?.id;
     const count = message.count ?? 0;
     if (tabId && count > 0) {
       updateBadge(tabId, count);
-      // Mark as resolved so storage.onChanged fallback doesn't double-badge
       if (pendingBadge[tabId]) {
         pendingBadge[tabId].badgedViaMessage = true;
       }
@@ -182,7 +158,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
-  /* Popup: read full state */
   if (message.type === "GET_STATE") {
     chrome.storage.local
       .get({ cleanedCount: 0, enabled: true, allowlist: [] })
@@ -194,7 +169,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  /* Popup: toggle on/off */
   if (message.type === "SET_ENABLED") {
     const newVal     = Boolean(message.enabled);
     sanitizerEnabled = newVal;
@@ -203,7 +177,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  /* Popup: add domain */
   if (message.type === "ALLOWLIST_ADD") {
     const domain = normaliseDomain(message.domain ?? "");
     if (!domain) { sendResponse({ success: false, reason: "empty" }); return false; }
@@ -216,7 +189,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  /* Popup: remove domain */
   if (message.type === "ALLOWLIST_REMOVE") {
     const domain = normaliseDomain(message.domain ?? "");
     chrome.storage.local.get({ allowlist: [] }).then(({ allowlist: stored }) => {
@@ -228,7 +200,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  /* Popup: clean current tab on demand */
   if (message.type === "CLEAN_TAB") {
     chrome.tabs.query({ active: true, currentWindow: true }).then(async ([tab]) => {
       if (!tab?.url)              { sendResponse({ status: "no_url" });      return; }
@@ -259,7 +230,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  /* Popup: reset counter */
+  if (message.type === "CLEAN_CLIPBOARD_TEXT") {
+    const rawText = message.text || "";
+    let urlObj;
+    try {
+      urlObj = new URL(rawText.trim());
+      if (urlObj.protocol !== "http:" && urlObj.protocol !== "https:") {
+        sendResponse({ status: "invalid_url" });
+        return;
+      }
+    } catch {
+      sendResponse({ status: "invalid_url" });
+      return;
+    }
+
+    const { cleanUrl, removed } = sanitizeUrl(urlObj.toString());
+    if (removed.length > 0) {
+      incrementCounter(removed.length).then(() => {
+        sendResponse({ status: "cleaned", cleanUrl, count: removed.length });
+      });
+    } else {
+      sendResponse({ status: "already_clean", cleanUrl });
+    }
+    return true;
+  }
+
   if (message.type === "RESET_COUNT") {
     chrome.storage.local.set({ cleanedCount: 0 })
       .then(() => sendResponse({ success: true }));

@@ -1,34 +1,37 @@
 /**
- * LinkSanitizer — popup.js (v2 with i18n)
+ * LinkSanitizer — popup.js (v2.2 with i18n & clipboard cleaner)
  */
 
 /* ── i18n helper ─────────────────────────────────────────────────────────── */
 const i18n = (key, subs) => chrome.i18n.getMessage(key, subs) || key;
 
 function applyI18n() {
-  document.getElementById("toggleStatus").textContent    = i18n("statusActive");
-  document.getElementById("counterLabel").textContent    = i18n("counterLabel");
-  document.getElementById("counterUnit").textContent     = i18n("counterUnit");
-  document.getElementById("paramsTitle").textContent     = i18n("paramsBeingStripped");
-  document.getElementById("cleanTabBtn").textContent     = i18n("cleanCurrentTab");
-  document.getElementById("resetBtn").textContent        = i18n("resetCounter");
-  document.getElementById("allowlistTitle").textContent  = i18n("allowlistTitle");
-  document.getElementById("allowlistHint").textContent   = i18n("allowlistHint");
-  document.getElementById("allowlistInput").placeholder  = i18n("allowlistPlaceholder");
-  document.getElementById("allowlistAddBtn").textContent = i18n("allowlistAdd");
+  document.getElementById("toggleStatus").textContent        = i18n("statusActive");
+  document.getElementById("counterLabel").textContent        = i18n("counterLabel");
+  document.getElementById("counterUnit").textContent         = i18n("counterUnit");
+  document.getElementById("paramsTitle").textContent         = i18n("paramsBeingStripped");
+  document.getElementById("cleanTabBtn").textContent         = i18n("cleanCurrentTab");
+  document.getElementById("cleanClipboardBtn").textContent   = i18n("cleanClipboardBtn");
+  document.getElementById("resetBtn").textContent            = i18n("resetCounter");
+  document.getElementById("allowlistTitle").textContent      = i18n("allowlistTitle");
+  document.getElementById("allowlistHint").textContent       = i18n("allowlistHint");
+  document.getElementById("allowlistInput").placeholder      = i18n("allowlistPlaceholder");
+  document.getElementById("allowlistAddBtn").textContent     = i18n("allowlistAdd");
+  document.getElementById("feedbackLink").textContent        = i18n("feedbackLink");
 }
 
 /* ── DOM refs ────────────────────────────────────────────────────────────── */
-const counterEl       = document.getElementById("counterValue");
-const toggleInput     = document.getElementById("enabledToggle");
-const toggleStatus    = document.getElementById("toggleStatus");
-const container       = document.getElementById("container");
-const cleanTabBtn     = document.getElementById("cleanTabBtn");
-const resetBtn        = document.getElementById("resetBtn");
-const cleanFeedback   = document.getElementById("cleanFeedback");
-const allowlistInput  = document.getElementById("allowlistInput");
-const allowlistAddBtn = document.getElementById("allowlistAddBtn");
-const allowlistItems  = document.getElementById("allowlistItems");
+const counterEl         = document.getElementById("counterValue");
+const toggleInput       = document.getElementById("enabledToggle");
+const toggleStatus      = document.getElementById("toggleStatus");
+const container         = document.getElementById("container");
+const cleanTabBtn       = document.getElementById("cleanTabBtn");
+const cleanClipboardBtn = document.getElementById("cleanClipboardBtn");
+const resetBtn          = document.getElementById("resetBtn");
+const cleanFeedback     = document.getElementById("cleanFeedback");
+const allowlistInput    = document.getElementById("allowlistInput");
+const allowlistAddBtn   = document.getElementById("allowlistAddBtn");
+const allowlistItems    = document.getElementById("allowlistItems");
 
 /* ── Counter ─────────────────────────────────────────────────────────────── */
 function animateCounter(target) {
@@ -140,7 +143,6 @@ async function addDomain() {
     return;
   }
 
-  // Always write to storage first — this is the authoritative source.
   const stored  = await chrome.storage.local.get({ allowlist: [] });
   const domain  = normaliseDomain(raw);
   const updated = Array.from(new Set([...stored.allowlist, domain]));
@@ -148,7 +150,6 @@ async function addDomain() {
   allowlistInput.value = "";
   renderAllowlist(updated);
 
-  // Also notify background to sync its in-memory copy. Fire-and-forget.
   chrome.runtime.sendMessage({ type: "ALLOWLIST_ADD", domain }).catch(() => {});
 }
 
@@ -156,19 +157,12 @@ async function removeDomain(domain, liEl) {
   liEl.classList.add("removing");
   await new Promise((r) => setTimeout(r, 180));
 
-  // Step 1: always write to storage directly — this is the authoritative source.
-  // The content script reads storage directly (v2.1), so this alone is enough
-  // to make the next page load behave correctly.
   const stored  = await chrome.storage.local.get({ allowlist: [] });
   const norm    = normaliseDomain(domain);
   const updated = stored.allowlist.filter((d) => normaliseDomain(d) !== norm);
   await chrome.storage.local.set({ allowlist: updated });
 
-  // Step 2: also notify the background so its in-memory copy stays in sync
-  // (used by CLEAN_TAB). Fire-and-forget — UI doesn't depend on the response.
   chrome.runtime.sendMessage({ type: "ALLOWLIST_REMOVE", domain }).catch(() => {});
-
-  // Step 3: re-render the popup list from the value we just wrote
   renderAllowlist(updated);
 }
 
@@ -235,6 +229,38 @@ async function cleanCurrentTab() {
   }
 }
 
+/* ── Clean from clipboard ────────────────────────────────────────────────── */
+async function cleanClipboard() {
+  cleanClipboardBtn.disabled = true;
+  try {
+    const text = await navigator.clipboard.readText();
+    if (!text || !text.trim()) {
+      showFeedback(i18n("clipboardNoUrl"), "warning");
+      return;
+    }
+
+    const response = await chrome.runtime.sendMessage({
+      type: "CLEAN_CLIPBOARD_TEXT",
+      text: text.trim()
+    });
+
+    if (response?.status === "cleaned") {
+      await navigator.clipboard.writeText(response.cleanUrl);
+      showFeedback(i18n("cleanTabDone", [String(response.count)]), "success");
+      const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
+      animateCounter(state?.cleanedCount ?? 0);
+    } else if (response?.status === "already_clean") {
+      showFeedback(i18n("clipboardNoTrackers"), "neutral");
+    } else {
+      showFeedback(i18n("clipboardNoUrl"), "warning");
+    }
+  } catch {
+    showFeedback(i18n("clipboardNoUrl"), "warning");
+  } finally {
+    cleanClipboardBtn.disabled = false;
+  }
+}
+
 /* ── Reset counter ───────────────────────────────────────────────────────── */
 async function resetCount() {
   resetBtn.disabled    = true;
@@ -264,6 +290,7 @@ toggleInput.addEventListener("change", async () => {
 });
 
 cleanTabBtn.addEventListener("click", cleanCurrentTab);
+cleanClipboardBtn.addEventListener("click", cleanClipboard);
 resetBtn.addEventListener("click", resetCount);
 allowlistAddBtn.addEventListener("click", addDomain);
 allowlistInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addDomain(); });

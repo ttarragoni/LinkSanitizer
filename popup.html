@@ -34,9 +34,10 @@
       <span class="counter-value" id="counterValue">—</span>
       <span class="counter-unit" id="counterUnit"></span>
 
-      <!-- Stacked buttons: clean on top (primary), reset below (subtle) -->
+      <!-- Stacked buttons: clean on top (primary), clipboard (secondary), reset below (subtle) -->
       <div class="btn-stack">
         <button class="btn btn-clean" id="cleanTabBtn"></button>
+        <button class="btn btn-clean" id="cleanClipboardBtn"></button>
         <button class="btn btn-reset" id="resetBtn"></button>
       </div>
       <p class="clean-feedback" id="cleanFeedback"></p>
@@ -45,7 +46,6 @@
     <div class="divider"></div>
 
     <!-- ── Params scroll row ── -->
-<!-- ── Params scroll row ── -->
     <section class="params-section">
       <div class="params-header">
         <span class="params-summary" id="paramsTitle">PARAMETRI MONITORATI (SCORRI ➔)</span>
@@ -89,6 +89,13 @@
       </div>
       <ul class="allowlist-items" id="allowlistItems"></ul>
     </section>
+
+    <div class="divider"></div>
+
+    <!-- ── Footer / Feedback ── -->
+    <footer class="footer">
+      <a href="https://github.com/ttarragoni/LinkSanitizer/issues" target="_blank" rel="noopener noreferrer" class="feedback-link" id="feedbackLink"></a>
+    </footer>
 
   </div>
   <script src="popup.js"></script>

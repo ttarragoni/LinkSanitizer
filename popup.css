@@ -3,11 +3,12 @@
 
    Changes from v2:
    1. Buttons stacked vertically (btn-stack), reset is smaller/subtle.
-   2. Params section wrapped in <details> accordion.
-   3. Rounded pill toggle switch replacing native checkbox.
+   2. Clipboard cleaner button styled as secondary action.
+   3. Params section wrapped in <details> accordion.
+   4. Rounded pill toggle switch replacing native checkbox.
       Green slider = active, Red slider = paused.
       Container dims when paused (is-disabled).
-   4. Font changed to clean system-ui stack; sizes bumped for legibility.
+   5. Font changed to clean system-ui stack; sizes bumped for legibility.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Reset ───────────────────────────────────────────────────────────────── */
@@ -200,6 +201,21 @@ body {
 }
 .btn-clean:hover:not(:disabled) { background: var(--green-hover); }
 
+/* Secondary Action: Clean from clipboard — subtle surface styling */
+#cleanClipboardBtn {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+#cleanClipboardBtn:hover:not(:disabled) {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-dim);
+}
+
 /* Secondary: Reset — smaller, subtle, red on hover */
 .btn-reset {
   padding: 5px 12px;
@@ -282,15 +298,6 @@ body {
   padding: 3px 8px;
   border-radius: 4px;
   font-family: monospace;
-}
-
-.param-tag {
-  background: rgba(0,255,157,0.07);
-  border: 1px solid rgba(0,255,157,0.2);
-  color: var(--green);
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 4px;
 }
 
 /* ── Allowlist section ───────────────────────────────────────────────────── */
@@ -397,6 +404,24 @@ body {
 }
 
 /* ── Disabled / paused state ─────────────────────────────────────────────── */
-.container.is-disabled                { background: var(--bg-disabled); }
-.container.is-disabled .counter-value { opacity: 0.3; }
-.container.is-disabled .btn-clean     { opacity: 0.35; pointer-events: none; }
+.container.is-disabled                    { background: var(--bg-disabled); }
+.container.is-disabled .counter-value     { opacity: 0.3; }
+.container.is-disabled .btn-clean         { opacity: 0.35; pointer-events: none; }
+.container.is-disabled #cleanClipboardBtn { opacity: 0.35; pointer-events: none; }
+/* ── Footer / Feedback ───────────────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  padding: 4px 0 2px;
+}
+
+.feedback-link {
+  font-size: 11px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.18s;
+}
+
+.feedback-link:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
